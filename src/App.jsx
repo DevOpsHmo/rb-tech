@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import './App.css';
 import { generarHTMLPDF } from './pdfTemplate';
-import logoImg from './assets/logo.png';
+import logoBase64 from './assets/logo.png?inline';  // ⬅️ CAMBIO AQUÍ
 
 const PRECIOS = {
   llavero: {
@@ -16,15 +16,7 @@ const PRECIOS = {
   envio: 100
 };
 
-const convertirLogoABase64 = async (url) => {
-  const respuesta = await fetch(url);
-  const blob = await respuesta.blob();
-  return new Promise((resolve) => {
-    const reader = new FileReader();
-    reader.onloadend = () => resolve(reader.result);
-    reader.readAsDataURL(blob);
-  });
-};
+// ⬅️ FUNCIÓN ELIMINADA: convertirLogoABase64 ya no es necesaria
 
 function App() {
   const [llavero, setLlavero] = useState('basico');
@@ -66,7 +58,6 @@ function App() {
     try {
       const { jsPDF } = await import('jspdf');
       const html2canvas = (await import('html2canvas')).default;
-      const logoBase64 = await convertirLogoABase64(logoImg);
 
       const hoy = new Date();
       const vence = new Date();
@@ -74,7 +65,7 @@ function App() {
       const fmtFecha = (d) => d.toLocaleDateString('es-MX', { day: '2-digit', month: 'long', year: 'numeric' });
 
       const htmlContent = generarHTMLPDF({
-        logoBase64,
+        logoBase64,  // ⬅️ Ya viene directo del import
         numeroCotizacion: `RB-${hoy.getFullYear()}${String(hoy.getMonth()+1).padStart(2,'0')}${String(hoy.getDate()).padStart(2,'0')}-${String(Math.floor(Math.random()*9000)+1000)}`,
         fechaEmision: fmtFecha(hoy),
         fechaVencimiento: fmtFecha(vence),
@@ -147,7 +138,6 @@ function App() {
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
 
-      // Escalar para que quepa completo en una sola hoja
       const imgRatio = canvas.height / canvas.width;
       const pdfRatio = pdfHeight / pdfWidth;
 
@@ -165,7 +155,6 @@ function App() {
 
       const nombreArchivo = `Cotizacion_RB_TECH_${Date.now()}.pdf`;
 
-      // ============ DETECCIÓN DE DISPOSITIVO ============
       const esAndroid = /Android/i.test(navigator.userAgent);
       const esIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
       const esMovil = esAndroid || esIOS;
@@ -174,7 +163,6 @@ function App() {
         const pdfBlob = pdf.output('blob');
         const archivo = new File([pdfBlob], nombreArchivo, { type: 'application/pdf' });
 
-        // Intento 1: Web Share API (móvil) → menú nativo
         if (navigator.canShare && navigator.canShare({ files: [archivo] })) {
           try {
             await navigator.share({
@@ -193,7 +181,6 @@ function App() {
           }
         }
 
-        // Fallback: descarga manual con Blob URL
         const blobUrl = URL.createObjectURL(pdfBlob);
         const link = document.createElement('a');
         link.href = blobUrl;
@@ -209,7 +196,6 @@ function App() {
         }, 1000);
 
       } else {
-        // ============ DESKTOP: descarga directa ============
         pdf.save(nombreArchivo);
       }
 
@@ -224,13 +210,11 @@ function App() {
 
   return (
     <div className="app">
-      {/* HEADER: solo texto, sin logo */}
       <header className="app-header">
         <h1 className="logo-texto">RB.TECH</h1>
         <p className="tagline">Llaveros 3D + Tarjeta Digital NFC</p>
       </header>
 
-      {/* LAYOUT DESKTOP: 2 columnas */}
       <main className="app-main">
         <div className="scroll-area">
           <div className="formulario">
@@ -313,7 +297,6 @@ function App() {
           </div>
         </div>
 
-        {/* COLUMNA DERECHA EN DESKTOP: resumen en vivo */}
         <aside className="resumen-panel">
           <div className="resumen-card">
             <h3>Resumen</h3>
@@ -343,7 +326,6 @@ function App() {
         </aside>
       </main>
 
-      {/* FOOTER FIJO */}
       <footer className="app-footer">
         <div className="total-info">
           <span className="total-label">Total</span>
