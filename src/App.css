@@ -448,12 +448,10 @@ html, body, #root {
 
 /* ============ RESPONSIVE: DESKTOP (2 columnas) ============ */
 @media (min-width: 1024px) {
-  /* Header más compacto */
   .app-header {
     padding: 16px 40px 12px;
   }
 
-  /* Grid de 2 columnas: formulario | resumen */
   .app-main {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     gap: 30px;
@@ -463,7 +461,6 @@ html, body, #root {
     overflow: hidden;
   }
 
-  /* Columna izquierda: formulario con scroll interno suave */
   .scroll-area {
     overflow-y: auto;
     overflow-x: hidden;
@@ -499,7 +496,6 @@ html, body, #root {
     padding-bottom: 20px;
   }
 
-  /* Columna derecha: panel de resumen centrado verticalmente */
   .resumen-panel {
     display: flex;
     align-items: center;
@@ -515,7 +511,6 @@ html, body, #root {
     max-width: 480px;
   }
 
-  /* Footer más ancho */
   .app-footer {
     padding: 16px 40px 20px;
   }

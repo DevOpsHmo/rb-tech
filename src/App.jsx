@@ -147,26 +147,72 @@ function App() {
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
 
-      // ✅ FORZAR UNA SOLA HOJA: escalar la imagen para que quepa completa
+      // Escalar para que quepa completo en una sola hoja
       const imgRatio = canvas.height / canvas.width;
       const pdfRatio = pdfHeight / pdfWidth;
 
       let finalWidth, finalHeight;
       if (imgRatio > pdfRatio) {
-        // La imagen es más alta: ajustar por altura
         finalHeight = pdfHeight;
         finalWidth = pdfHeight / imgRatio;
       } else {
-        // La imagen es más ancha: ajustar por ancho
         finalWidth = pdfWidth;
         finalHeight = pdfWidth * imgRatio;
       }
 
-      // Centrar horizontalmente
       const offsetX = (pdfWidth - finalWidth) / 2;
-
       pdf.addImage(imgData, 'JPEG', offsetX, 0, finalWidth, finalHeight);
-      pdf.save(`Cotizacion_RB_TECH_${Date.now()}.pdf`);
+
+      const nombreArchivo = `Cotizacion_RB_TECH_${Date.now()}.pdf`;
+
+      // ============ DETECCIÓN DE DISPOSITIVO ============
+      const esAndroid = /Android/i.test(navigator.userAgent);
+      const esIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+      const esMovil = esAndroid || esIOS;
+
+      if (esMovil) {
+        const pdfBlob = pdf.output('blob');
+        const archivo = new File([pdfBlob], nombreArchivo, { type: 'application/pdf' });
+
+        // Intento 1: Web Share API (móvil) → menú nativo
+        if (navigator.canShare && navigator.canShare({ files: [archivo] })) {
+          try {
+            await navigator.share({
+              files: [archivo],
+              title: 'Cotización RB.TECH',
+              text: 'Aquí está tu cotización en PDF'
+            });
+            document.body.removeChild(iframe);
+            return;
+          } catch (shareError) {
+            if (shareError.name === 'AbortError') {
+              document.body.removeChild(iframe);
+              return;
+            }
+            console.warn('Share API falló, usando fallback:', shareError);
+          }
+        }
+
+        // Fallback: descarga manual con Blob URL
+        const blobUrl = URL.createObjectURL(pdfBlob);
+        const link = document.createElement('a');
+        link.href = blobUrl;
+        link.download = nombreArchivo;
+        link.rel = 'noopener';
+        link.style.display = 'none';
+        document.body.appendChild(link);
+        link.click();
+
+        setTimeout(() => {
+          document.body.removeChild(link);
+          URL.revokeObjectURL(blobUrl);
+        }, 1000);
+
+      } else {
+        // ============ DESKTOP: descarga directa ============
+        pdf.save(nombreArchivo);
+      }
+
       document.body.removeChild(iframe);
     } catch (error) {
       console.error('Error al generar PDF:', error);
